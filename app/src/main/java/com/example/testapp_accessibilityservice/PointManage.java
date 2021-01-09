@@ -72,13 +72,13 @@ public class PointManage {
                                 | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
                                 | WindowManager.LayoutParams.FLAG_FULLSCREEN;
 
+                        para.gravity = 51;
 
                         para.width = 100;
                         para.height = 100;
-                        para.gravity = 0;
 
-                        para.x = ((int)(newX - oldX));
-                        para.y = ((int)(newY - oldY));
+                        para.x = ((int)(newX));
+                        para.y = ((int)(newY));
 
                         wm.updateViewLayout(pointView, para);
                         break;
