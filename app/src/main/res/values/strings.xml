@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">testApp_AccessibilityService</string>
+    <string name="Power">POWER</string>
+    <string name="Volum">VOL+</string>
+    <string name="Scroll">SCROLL</string>
+    <string name="Swipe">SWIPE</string>
+    <string name="Start">START</string>
+    <string name="End">END</string>
+    <string name="BLANK" />
+    <string name="TestBtn">TESTBTN</string>
+</resources>

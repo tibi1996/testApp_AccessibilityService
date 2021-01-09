@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main_layout"
+    android:layout_width="100dp"
+    android:layout_height="wrap_content"
+    android:background="#80AAAAAA"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/txtG"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:background="#02FF0E"
+        android:gravity="center_vertical"
+        android:text="@string/BLANK" />
+
+    <TextView
+        android:id="@+id/txtP"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:background="#FF00DD"
+        android:gravity="center_vertical"
+        android:text="@string/BLANK" />
+
+    <TextView
+        android:id="@+id/txtB"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:background="#1100FF"
+        android:gravity="center_vertical"
+        android:text="@string/BLANK" />
+
+    <TextView
+        android:id="@+id/txtY"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:background="#FFDD00"
+        android:gravity="center_vertical"
+        android:text="@string/BLANK" />
+
+    <TextView
+        android:id="@+id/txtO"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:background="@android:color/holo_orange_dark"
+        android:gravity="center_vertical"
+        android:text="@string/BLANK" />
+
+    <TextView
+        android:id="@+id/txtR"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:background="@android:color/holo_red_dark"
+        android:gravity="center_vertical"
+        android:text="@string/BLANK" />
+
+</LinearLayout>

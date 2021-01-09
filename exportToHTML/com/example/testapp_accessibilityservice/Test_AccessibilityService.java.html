@@ -1,0 +1,300 @@
+<html>
+<head>
+<title>Test_AccessibilityService.java</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #ed864a;}
+.s1 { color: #ebebeb;}
+.s2 { color: #ed864a; font-weight: bold;}
+.s3 { color: #33ccff; font-weight: bold;}
+.s4 { color: #7ec3e6;}
+.s5 { color: #54b33e;}
+</style>
+</head>
+<body bgcolor="#131314">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Test_AccessibilityService.java</font>
+</center></td></tr></table>
+<pre><span class="s0">package </span><span class="s1">com.example.testapp_accessibilityservice</span><span class="s2">;</span>
+
+<span class="s0">import </span><span class="s1">android.accessibilityservice.AccessibilityService</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.accessibilityservice.GestureDescription</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.content.Context</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.content.Intent</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.graphics.Canvas</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.graphics.Color</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.graphics.Paint</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.graphics.Path</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.graphics.PixelFormat</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.graphics.Point</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.os.IBinder</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.provider.Settings</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.util.Log</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.view.Display</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.view.Gravity</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.view.LayoutInflater</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.view.MotionEvent</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.view.View</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.view.ViewParent</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.view.WindowManager</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.view.accessibility.AccessibilityEvent</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.widget.FrameLayout</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.widget.TextView</span><span class="s2">;</span>
+
+<span class="s0">import </span><span class="s1">java.io.BufferedReader</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">java.io.InputStreamReader</span><span class="s2">;</span>
+
+<span class="s0">public class </span><span class="s1">Test_AccessibilityService </span><span class="s0">extends </span><span class="s1">AccessibilityService </span><span class="s0">implements </span><span class="s1">View.OnTouchListener{</span>
+
+    <span class="s1">FrameLayout layout</span><span class="s2">;</span>
+    <span class="s1">WindowManager wm</span><span class="s2">;</span>
+    <span class="s1">WindowManager.LayoutParams para = </span><span class="s0">new </span><span class="s1">WindowManager.LayoutParams()</span><span class="s2">;</span>
+
+    <span class="s1">TextView texViewArry[] = </span><span class="s0">new </span><span class="s1">TextView[</span><span class="s3">20</span><span class="s1">]</span><span class="s2">;</span>
+
+    <span class="s1">@Override</span>
+    <span class="s0">public int </span><span class="s1">onStartCommand(Intent intent</span><span class="s2">, </span><span class="s0">int </span><span class="s1">i</span><span class="s2">, </span><span class="s0">int </span><span class="s1">i2) {</span>
+        <span class="s4">// レイアウトを作るか確認</span>
+        <span class="s0">if</span><span class="s1">(intent.getAction().equals(</span><span class="s5">&quot;ON&quot;</span><span class="s1">)) {</span>
+            <span class="s1">wm = (WindowManager) getSystemService(WINDOW_SERVICE)</span><span class="s2">;</span>
+            <span class="s1">layout = </span><span class="s0">new </span><span class="s1">FrameLayout(</span><span class="s0">this</span><span class="s1">)</span><span class="s2">;</span>
+            <span class="s1">WindowManager.LayoutParams lp = </span><span class="s0">new </span><span class="s1">WindowManager.LayoutParams()</span><span class="s2">;</span>
+
+            <span class="s1">lp.type = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY</span><span class="s2">;</span>
+            <span class="s1">lp.format = PixelFormat.TRANSLUCENT</span><span class="s2">;</span>
+            <span class="s1">lp.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE</span><span class="s2">;</span>
+            <span class="s1">lp.width = WindowManager.LayoutParams.WRAP_CONTENT</span><span class="s2">;</span>
+            <span class="s1">lp.height = WindowManager.LayoutParams.WRAP_CONTENT</span><span class="s2">;</span>
+            <span class="s1">lp.gravity = Gravity.CENTER_VERTICAL|Gravity.LEFT</span><span class="s2">;</span>
+
+
+            <span class="s1">LayoutInflater inflater = LayoutInflater.from(</span><span class="s0">this</span><span class="s1">)</span><span class="s2">;</span>
+            <span class="s1">inflater.inflate(R.layout.menu</span><span class="s2">, </span><span class="s1">layout)</span><span class="s2">;</span>
+
+            <span class="s4">//レイアウトを追加</span>
+            <span class="s1">wm.addView(layout</span><span class="s2">, </span><span class="s1">lp)</span><span class="s2">;</span>
+        <span class="s1">}</span><span class="s0">else if</span><span class="s1">(intent.getAction().equals(</span><span class="s5">&quot;OFF&quot;</span><span class="s1">)) {</span>
+            <span class="s0">if</span><span class="s1">(layout != </span><span class="s0">null</span><span class="s1">) {</span>
+                <span class="s4">//レイアウトを削除</span>
+                <span class="s1">wm.removeViewImmediate(layout)</span><span class="s2">;</span>
+            <span class="s1">}</span>
+
+            <span class="s4">//ユーザー補助をオフにする</span>
+            <span class="s1">disableSelf()</span><span class="s2">;</span>
+
+        <span class="s1">}</span><span class="s0">else</span><span class="s1">{</span>
+
+        <span class="s1">}</span>
+
+        <span class="s1">TextView txtG = </span><span class="s0">this</span><span class="s1">.layout.findViewById(R.id.txtG)</span><span class="s2">;</span>
+        <span class="s1">TextView txtB = </span><span class="s0">this</span><span class="s1">.layout.findViewById(R.id.txtB)</span><span class="s2">;</span>
+        <span class="s1">TextView txtP = </span><span class="s0">this</span><span class="s1">.layout.findViewById(R.id.txtP)</span><span class="s2">;</span>
+
+
+        <span class="s1">txtG.setOnClickListener(</span><span class="s0">new </span><span class="s1">View.OnClickListener() {</span>
+            <span class="s1">@Override</span>
+            <span class="s0">public void </span><span class="s1">onClick(View v) {</span>
+                <span class="s1">Log.i(</span><span class="s5">&quot;txtG_onClick&quot;</span><span class="s2">, </span><span class="s5">&quot;onClick&quot;</span><span class="s1">)</span><span class="s2">;</span>
+            <span class="s1">}</span>
+        <span class="s1">})</span><span class="s2">;</span>
+
+        <span class="s1">txtB.setOnClickListener(</span><span class="s0">new </span><span class="s1">View.OnClickListener() {</span>
+            <span class="s1">@Override</span>
+            <span class="s0">public void </span><span class="s1">onClick(View v) {</span>
+                <span class="s1">addTextView()</span><span class="s2">;</span>
+            <span class="s1">}</span>
+        <span class="s1">})</span><span class="s2">;</span>
+
+        <span class="s1">txtP.setOnClickListener(</span><span class="s0">new </span><span class="s1">View.OnClickListener() {</span>
+            <span class="s1">@Override</span>
+            <span class="s0">public void </span><span class="s1">onClick(View v) {</span>
+                <span class="s1">tap()</span><span class="s2">;</span>
+            <span class="s1">}</span>
+        <span class="s1">})</span><span class="s2">;</span>
+
+        <span class="s1">txtG.setOnTouchListener(</span><span class="s0">new </span><span class="s1">View.OnTouchListener() {</span>
+            <span class="s1">@Override</span>
+            <span class="s0">public boolean </span><span class="s1">onTouch(View v</span><span class="s2">, </span><span class="s1">MotionEvent event) {</span>
+                <span class="s0">switch </span><span class="s1">(event.getAction()){</span>
+                    <span class="s0">case </span><span class="s1">MotionEvent.ACTION_DOWN:</span>
+                        <span class="s4">//down</span>
+                        <span class="s1">Log.i(</span><span class="s5">&quot;txtG_onTouch&quot;</span><span class="s2">, </span><span class="s5">&quot;ACTION_DOWN&quot;</span><span class="s1">)</span><span class="s2">;</span>
+                        <span class="s0">break</span><span class="s2">;</span>
+
+                    <span class="s0">case </span><span class="s1">MotionEvent.ACTION_MOVE:</span>
+                        <span class="s4">//move</span>
+                        <span class="s1">Log.i(</span><span class="s5">&quot;txtG_onTouch&quot;</span><span class="s2">, </span><span class="s5">&quot;ACTION_MOVE&quot;</span><span class="s1">)</span><span class="s2">;</span>
+                        <span class="s0">break</span><span class="s2">;</span>
+
+                    <span class="s0">case </span><span class="s1">MotionEvent.ACTION_UP:</span>
+                        <span class="s4">//up</span>
+                        <span class="s1">Log.i(</span><span class="s5">&quot;txtG_onTouch&quot;</span><span class="s2">, </span><span class="s5">&quot;ACTION_UP&quot;</span><span class="s1">)</span><span class="s2">;</span>
+                        <span class="s0">break</span><span class="s2">;</span>
+
+
+                <span class="s1">}</span>
+
+                <span class="s0">return true</span><span class="s2">;</span>
+            <span class="s1">}</span>
+
+        <span class="s1">})</span><span class="s2">;</span>
+
+        <span class="s0">return </span><span class="s1">START_STICKY</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s4">//追加</span>
+    <span class="s0">private void </span><span class="s1">addTextView(){</span>
+
+        <span class="s0">if</span><span class="s1">(texViewArry[</span><span class="s3">0</span><span class="s1">] == </span><span class="s0">null</span><span class="s1">) {</span>
+            <span class="s1">para.type = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY</span><span class="s2">;</span>
+            <span class="s1">para.format = PixelFormat.TRANSLUCENT</span><span class="s2">;</span>
+            <span class="s1">para.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE</span>
+                    <span class="s1">| WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL</span>
+                    <span class="s4">//| WindowManager.LayoutParams.FLAG_SPLIT_TOUCH</span>
+                    <span class="s1">| WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH</span>
+                    <span class="s1">| WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN</span><span class="s2">;</span>
+            <span class="s1">para.width = WindowManager.LayoutParams.WRAP_CONTENT</span><span class="s2">;</span>
+            <span class="s1">para.height = WindowManager.LayoutParams.WRAP_CONTENT</span><span class="s2">;</span>
+            <span class="s1">para.gravity = Gravity.TOP | Gravity.LEFT</span><span class="s2">;</span>
+
+            <span class="s1">para.x = </span><span class="s3">900</span><span class="s2">;</span>
+            <span class="s1">para.y = </span><span class="s3">1100</span><span class="s2">;</span>
+
+
+            <span class="s1">TextView addTxt = </span><span class="s0">new </span><span class="s1">TextView(</span><span class="s0">this</span><span class="s1">)</span><span class="s2">;</span>
+            <span class="s1">addTxt.setWidth(</span><span class="s3">100</span><span class="s1">)</span><span class="s2">;</span>
+            <span class="s1">addTxt.setHeight(</span><span class="s3">100</span><span class="s1">)</span><span class="s2">;</span>
+            <span class="s1">addTxt.setText(</span><span class="s5">&quot;ADD_TEST&quot;</span><span class="s1">)</span><span class="s2">;</span>
+            <span class="s1">addTxt.setBackgroundColor(Color.MAGENTA)</span><span class="s2">;</span>
+            <span class="s1">addTxt.setId(R.id.add1)</span><span class="s2">;</span>
+
+            <span class="s1">addTxt.setOnTouchListener(</span><span class="s0">new </span><span class="s1">View.OnTouchListener() {</span>
+                <span class="s1">@Override</span>
+                <span class="s0">public boolean </span><span class="s1">onTouch(View v</span><span class="s2">, </span><span class="s1">MotionEvent event) {</span>
+                    <span class="s0">return false</span><span class="s2">;</span>
+                <span class="s1">}</span>
+            <span class="s1">})</span><span class="s2">;</span>
+            <span class="s1">texViewArry[</span><span class="s3">0</span><span class="s1">] = addTxt</span><span class="s2">;</span>
+
+
+            <span class="s1">Log.i(</span><span class="s5">&quot;add_View&quot;</span><span class="s2">, </span><span class="s5">&quot;aaa&quot;</span><span class="s1">)</span><span class="s2">;</span>
+
+            <span class="s1">wm.addView(texViewArry[</span><span class="s3">0</span><span class="s1">]</span><span class="s2">, </span><span class="s1">para)</span><span class="s2">;</span>
+
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s4">//autoTap</span>
+    <span class="s0">private void </span><span class="s1">tap(){</span>
+        <span class="s0">try </span><span class="s1">{</span>
+            <span class="s4">//オートクリックコマンド</span>
+            <span class="s0">int </span><span class="s1">x = </span><span class="s3">0</span><span class="s2">;</span>
+            <span class="s0">int </span><span class="s1">y = </span><span class="s3">0</span><span class="s2">;</span>
+
+            <span class="s0">if</span><span class="s1">(texViewArry[</span><span class="s3">0</span><span class="s1">] != </span><span class="s0">null</span><span class="s1">) {</span>
+
+                <span class="s0">int </span><span class="s1">zahyo[] = </span><span class="s0">new int</span><span class="s1">[</span><span class="s3">2</span><span class="s1">]</span><span class="s2">;</span>
+
+                <span class="s4">//座標取得</span>
+                <span class="s1">texViewArry[</span><span class="s3">0</span><span class="s1">].getLocationOnScreen(zahyo)</span><span class="s2">;</span>
+                <span class="s1">x = zahyo[</span><span class="s3">0</span><span class="s1">]</span><span class="s2">;</span>
+                <span class="s1">y = zahyo[</span><span class="s3">1</span><span class="s1">]</span><span class="s2">;</span>
+
+
+
+
+                <span class="s4">//座標確認用(仮)------</span>
+                <span class="s1">TextView tG= layout.findViewById(R.id.txtG)</span><span class="s2">;</span>
+                <span class="s1">TextView tB= layout.findViewById(R.id.txtB)</span><span class="s2">;</span>
+                <span class="s1">tG.setText(String.valueOf(x))</span><span class="s2">;</span>
+                <span class="s1">tB.setText(String.valueOf(y))</span><span class="s2">;</span>
+                <span class="s4">//--------</span>
+
+
+                <span class="s1">Log.i(</span><span class="s5">&quot;add_View&quot;</span><span class="s2">, </span><span class="s5">&quot;bbb&quot;</span><span class="s1">)</span><span class="s2">;</span>
+
+            <span class="s1">}</span>
+
+
+            <span class="s4">//コマンド作成</span>
+            <span class="s1">String command = </span><span class="s5">&quot;input touchscreen tap &quot; </span><span class="s1">+ String.valueOf(x) + </span><span class="s5">&quot; &quot; </span><span class="s1">+ String.valueOf(y)</span><span class="s2">;</span>
+
+<span class="s4">/* 
+            TextView tmpTxt = texViewArry[0]; 
+            wm.removeViewImmediate(texViewArry[0]); 
+ 
+ 
+            Process process = Runtime.getRuntime().exec(command, null, null); 
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream())); 
+ 
+ 
+            //一時的に 
+            para.x = x; 
+            para.y = y - 84; 
+            wm.addView(tmpTxt, para); 
+ 
+*/</span>
+
+            <span class="s4">//GestureDescriptionテスト-----------------------------</span>
+            <span class="s4">//場所決め?</span>
+            <span class="s4">//Point position = new Point(x -10, y-10);</span>
+            <span class="s1">Point position = </span><span class="s0">new </span><span class="s1">Point(x</span><span class="s2">, </span><span class="s1">y)</span><span class="s2">;</span>
+            <span class="s4">//???</span>
+            <span class="s1">GestureDescription.Builder builder = </span><span class="s0">new </span><span class="s1">GestureDescription.Builder()</span><span class="s2">;</span>
+            <span class="s4">//???</span>
+            <span class="s1">Path p = </span><span class="s0">new </span><span class="s1">Path()</span><span class="s2">;</span>
+            <span class="s4">//???</span>
+            <span class="s1">p.moveTo(position.x</span><span class="s2">, </span><span class="s1">position.y)</span><span class="s2">;</span>
+            <span class="s4">//???</span>
+            <span class="s1">builder.addStroke(</span><span class="s0">new </span><span class="s1">GestureDescription.StrokeDescription(p</span><span class="s2">, </span><span class="s3">100L</span><span class="s2">, </span><span class="s3">50L</span><span class="s1">))</span><span class="s2">;</span>
+            <span class="s4">//???</span>
+            <span class="s1">GestureDescription gesture = builder.build()</span><span class="s2">;</span>
+            <span class="s4">//実行?</span>
+            <span class="s0">boolean </span><span class="s1">isDispatched = dispatchGesture(gesture</span><span class="s2">, </span><span class="s0">new </span><span class="s1">GestureResultCallback() {</span>
+                <span class="s1">@Override</span>
+                <span class="s0">public void </span><span class="s1">onCompleted(GestureDescription gestureDescription) {</span>
+                    <span class="s0">super</span><span class="s1">.onCompleted(gestureDescription)</span><span class="s2">;</span>
+                <span class="s1">}</span>
+
+                <span class="s1">@Override</span>
+                <span class="s0">public void </span><span class="s1">onCancelled(GestureDescription gestureDescription) {</span>
+                    <span class="s0">super</span><span class="s1">.onCancelled(gestureDescription)</span><span class="s2">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span><span class="s2">, </span><span class="s0">null</span><span class="s1">)</span><span class="s2">;</span>
+
+
+
+        <span class="s1">}</span><span class="s0">catch </span><span class="s1">(Exception e){</span>
+            <span class="s1">Log.i(</span><span class="s5">&quot;add_View&quot;</span><span class="s2">, </span><span class="s1">e.getMessage().toString())</span><span class="s2">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+
+    <span class="s0">public void </span><span class="s1">onServiceConnected() {</span>
+        <span class="s0">super</span><span class="s1">.onServiceConnected()</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+
+    <span class="s1">@Override</span>
+    <span class="s0">public void </span><span class="s1">onAccessibilityEvent(AccessibilityEvent event){</span>
+
+    <span class="s1">}</span>
+
+    <span class="s1">@Override</span>
+    <span class="s0">public void </span><span class="s1">onInterrupt(){</span>
+
+    <span class="s1">}</span>
+
+    <span class="s1">@Override</span>
+    <span class="s0">public boolean </span><span class="s1">onTouch(View v</span><span class="s2">, </span><span class="s1">MotionEvent event) {</span>
+
+        <span class="s1">Log.i(</span><span class="s5">&quot;add_View&quot;</span><span class="s2">, </span><span class="s5">&quot;d&quot;</span><span class="s1">)</span><span class="s2">;</span>
+        <span class="s0">return false</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

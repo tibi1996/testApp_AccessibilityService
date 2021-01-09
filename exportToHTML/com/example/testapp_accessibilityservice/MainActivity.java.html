@@ -1,0 +1,156 @@
+<html>
+<head>
+<title>MainActivity.java</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #ed864a;}
+.s1 { color: #ebebeb;}
+.s2 { color: #ed864a; font-weight: bold;}
+.s3 { color: #54b33e;}
+.s4 { color: #7ec3e6;}
+.s5 { color: #33ccff; font-weight: bold;}
+</style>
+</head>
+<body bgcolor="#131314">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+MainActivity.java</font>
+</center></td></tr></table>
+<pre><span class="s0">package </span><span class="s1">com.example.testapp_accessibilityservice</span><span class="s2">;</span>
+
+<span class="s0">import </span><span class="s1">androidx.appcompat.app.AppCompatActivity</span><span class="s2">;</span>
+
+<span class="s0">import </span><span class="s1">android.content.Intent</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.graphics.Color</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.net.Uri</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.os.Bundle</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.provider.Settings</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.text.TextUtils</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.util.Log</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.view.View</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">android.widget.Button</span><span class="s2">;</span>
+
+<span class="s0">public class </span><span class="s1">MainActivity </span><span class="s0">extends </span><span class="s1">AppCompatActivity {</span>
+
+    <span class="s0">private final </span><span class="s1">String LOGTAG_isAccessibilityEnabled = </span><span class="s3">&quot;isAccessibilityEnabled&quot;</span><span class="s2">;</span>
+    <span class="s0">private final </span><span class="s1">String ACCESSIBILITY_SERVICE_NAME = </span><span class="s3">&quot;com.example.testapp_accessibilityservice/com.example.testapp_accessibilityservice.Test_AccessibilityService&quot;</span><span class="s2">;</span>
+
+    <span class="s0">private boolean </span><span class="s1">btnflg</span><span class="s2">;</span>
+    <span class="s1">@Override</span>
+    <span class="s0">protected void </span><span class="s1">onCreate(Bundle savedInstanceState) {</span>
+        <span class="s0">super</span><span class="s1">.onCreate(savedInstanceState)</span><span class="s2">;</span>
+        <span class="s1">setContentView(R.layout.activity_main)</span><span class="s2">;</span>
+
+        <span class="s1">Button btnStart = findViewById(R.id.btnStart_MainLayout)</span><span class="s2">;</span>
+        <span class="s1">Button btnEnd = findViewById(R.id.btnEnd_MainLayout)</span><span class="s2">;</span>
+        <span class="s1">Button btnTest = findViewById(R.id.btnTest_MainActivity)</span><span class="s2">;</span>
+        <span class="s1">btnflg = </span><span class="s0">true</span><span class="s2">;</span>
+
+        <span class="s1">btnTest.setOnClickListener(</span><span class="s0">new </span><span class="s1">View.OnClickListener() {</span>
+            <span class="s1">@Override</span>
+            <span class="s0">public void </span><span class="s1">onClick(View v) {</span>
+                <span class="s0">if </span><span class="s1">(btnflg) {</span>
+                    <span class="s1">btnTest.setBackgroundColor(Color.RED)</span><span class="s2">;</span>
+                    <span class="s1">btnflg = </span><span class="s0">false</span><span class="s2">;</span>
+
+                <span class="s1">}</span><span class="s0">else</span><span class="s1">{</span>
+                    <span class="s1">btnTest.setBackgroundColor(Color.BLUE)</span><span class="s2">;</span>
+                    <span class="s1">btnflg = </span><span class="s0">true</span><span class="s2">;</span>
+
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+        <span class="s1">})</span><span class="s2">;</span>
+
+        <span class="s1">btnStart.setOnClickListener(</span><span class="s0">new </span><span class="s1">View.OnClickListener() {</span>
+            <span class="s1">@Override</span>
+            <span class="s0">public void </span><span class="s1">onClick(View v) {</span>
+
+                <span class="s1">make_SarviceIntent()</span><span class="s2">;</span>
+
+            <span class="s1">}</span>
+        <span class="s1">})</span><span class="s2">;</span>
+
+        <span class="s1">btnEnd.setOnClickListener(</span><span class="s0">new </span><span class="s1">View.OnClickListener() {</span>
+            <span class="s1">@Override</span>
+            <span class="s0">public void </span><span class="s1">onClick(View v) {</span>
+                <span class="s1">end__SarviceIntent()</span><span class="s2">;</span>
+            <span class="s1">}</span>
+        <span class="s1">})</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">private void </span><span class="s1">make_SarviceIntent(){</span>
+        <span class="s4">//ユーザー補助がオンか確認</span>
+        <span class="s0">if </span><span class="s1">(isAccessibilityEnabled()) {</span>
+            <span class="s1">Intent i = </span><span class="s0">new </span><span class="s1">Intent(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">Test_AccessibilityService.</span><span class="s0">class</span><span class="s1">)</span><span class="s2">;</span>
+            <span class="s1">i.setAction(</span><span class="s3">&quot;ON&quot;</span><span class="s1">)</span><span class="s2">;</span>
+            <span class="s1">startService(i)</span><span class="s2">;</span>
+        <span class="s1">}</span><span class="s0">else</span><span class="s1">{</span>
+            <span class="s1">Intent intent = </span><span class="s0">new </span><span class="s1">Intent()</span><span class="s2">;</span>
+            <span class="s1">intent.setAction(Settings.ACTION_ACCESSIBILITY_SETTINGS)</span><span class="s2">;</span>
+            <span class="s1">startActivity(intent)</span><span class="s2">;</span>
+        <span class="s1">}</span>
+
+
+    <span class="s1">}</span>
+
+    <span class="s0">private void </span><span class="s1">end__SarviceIntent(){</span>
+        <span class="s0">if </span><span class="s1">(isAccessibilityEnabled()) {</span>
+            <span class="s1">Intent i = </span><span class="s0">new </span><span class="s1">Intent(</span><span class="s0">this</span><span class="s2">, </span><span class="s1">Test_AccessibilityService.</span><span class="s0">class</span><span class="s1">)</span><span class="s2">;</span>
+            <span class="s1">i.setAction(</span><span class="s3">&quot;OFF&quot;</span><span class="s1">)</span><span class="s2">;</span>
+            <span class="s1">startService(i)</span><span class="s2">;</span>
+        <span class="s1">}</span><span class="s0">else</span><span class="s1">{</span>
+        <span class="s1">Intent intent = </span><span class="s0">new </span><span class="s1">Intent()</span><span class="s2">;</span>
+        <span class="s1">intent.setAction(Settings.ACTION_ACCESSIBILITY_SETTINGS)</span><span class="s2">;</span>
+        <span class="s1">startActivity(intent)</span><span class="s2">;</span>
+    <span class="s1">}</span>
+
+
+<span class="s1">}</span>
+
+    <span class="s0">public boolean </span><span class="s1">isAccessibilityEnabled() {</span>
+        <span class="s0">int </span><span class="s1">accessibilityEnabled = </span><span class="s5">0</span><span class="s2">;</span>
+
+        <span class="s4">//戻り値</span>
+        <span class="s0">boolean </span><span class="s1">accessibilityFound = </span><span class="s0">false</span><span class="s2">;</span>
+        <span class="s0">try </span><span class="s1">{</span>
+            <span class="s4">//ユーザー補助の確認</span>
+            <span class="s1">accessibilityEnabled = Settings.Secure.getInt(</span><span class="s0">this</span><span class="s1">.getContentResolver()</span><span class="s2">, </span><span class="s1">android.provider.Settings.Secure.ACCESSIBILITY_ENABLED)</span><span class="s2">;</span>
+            <span class="s1">Log.d(LOGTAG_isAccessibilityEnabled</span><span class="s2">, </span><span class="s3">&quot;ACCESSIBILITY: &quot; </span><span class="s1">+ accessibilityEnabled)</span><span class="s2">;</span>
+        <span class="s1">} </span><span class="s0">catch </span><span class="s1">(Settings.SettingNotFoundException e) {</span>
+            <span class="s1">Log.d(LOGTAG_isAccessibilityEnabled</span><span class="s2">, </span><span class="s3">&quot;Error finding setting, default accessibility to not found: &quot; </span><span class="s1">+ e.getMessage())</span><span class="s2">;</span>
+        <span class="s1">}</span>
+
+        <span class="s1">TextUtils.SimpleStringSplitter mStringColonSplitter = </span><span class="s0">new </span><span class="s1">TextUtils.SimpleStringSplitter(</span><span class="s3">':'</span><span class="s1">)</span><span class="s2">;</span>
+
+        <span class="s0">if </span><span class="s1">(accessibilityEnabled==</span><span class="s5">1</span><span class="s1">) {</span>
+            <span class="s4">//ユーザー補助on</span>
+            <span class="s1">Log.d(LOGTAG_isAccessibilityEnabled</span><span class="s2">, </span><span class="s3">&quot;***ACCESSIBILIY IS ENABLED***: &quot;</span><span class="s1">)</span><span class="s2">;</span>
+
+            <span class="s1">String settingValue = Settings.Secure.getString(getContentResolver()</span><span class="s2">, </span><span class="s1">Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)</span><span class="s2">;</span>
+            <span class="s1">Log.d(LOGTAG_isAccessibilityEnabled</span><span class="s2">, </span><span class="s3">&quot;Setting: &quot; </span><span class="s1">+ settingValue)</span><span class="s2">;</span>
+            <span class="s0">if </span><span class="s1">(settingValue != </span><span class="s0">null</span><span class="s1">) {</span>
+                <span class="s1">TextUtils.SimpleStringSplitter splitter = mStringColonSplitter</span><span class="s2">;</span>
+                <span class="s1">splitter.setString(settingValue)</span><span class="s2">;</span>
+                <span class="s0">while </span><span class="s1">(splitter.hasNext()) {</span>
+                    <span class="s1">String accessabilityService = splitter.next()</span><span class="s2">;</span>
+                    <span class="s1">Log.d(LOGTAG_isAccessibilityEnabled</span><span class="s2">, </span><span class="s3">&quot;Setting: &quot; </span><span class="s1">+ accessabilityService)</span><span class="s2">;</span>
+                    <span class="s4">//目的のサービスが有効になっているか確認</span>
+                    <span class="s0">if </span><span class="s1">(accessabilityService.equalsIgnoreCase(ACCESSIBILITY_SERVICE_NAME)){</span>
+                        <span class="s1">Log.d(LOGTAG_isAccessibilityEnabled</span><span class="s2">, </span><span class="s3">&quot;We've found the correct setting - accessibility is switched on!&quot;</span><span class="s1">)</span><span class="s2">;</span>
+                        <span class="s0">return true</span><span class="s2">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+
+            <span class="s1">Log.d(LOGTAG_isAccessibilityEnabled</span><span class="s2">, </span><span class="s3">&quot;***END***&quot;</span><span class="s1">)</span><span class="s2">;</span>
+        <span class="s1">}</span>
+        <span class="s0">else </span><span class="s1">{</span>
+            <span class="s4">//ユーザー補助off</span>
+            <span class="s1">Log.d(LOGTAG_isAccessibilityEnabled</span><span class="s2">, </span><span class="s3">&quot;***ACCESSIBILIY IS DISABLED***&quot;</span><span class="s1">)</span><span class="s2">;</span>
+        <span class="s1">}</span>
+        <span class="s0">return </span><span class="s1">accessibilityFound</span><span class="s2">;</span>
+    <span class="s1">}</span>
+<span class="s1">}</span></pre>
+</body>
+</html>
