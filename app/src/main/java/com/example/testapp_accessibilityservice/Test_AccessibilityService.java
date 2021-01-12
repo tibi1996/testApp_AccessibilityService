@@ -26,7 +26,9 @@ import android.view.ViewParent;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
@@ -41,7 +43,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Test_AccessibilityService extends AccessibilityService implements View.OnTouchListener{
 
-    FrameLayout layout;
+    FrameLayout ctrlPanel;
     WindowManager wm;
     WindowManager.LayoutParams para = new WindowManager.LayoutParams();
 
@@ -52,10 +54,18 @@ public class Test_AccessibilityService extends AccessibilityService implements V
     private Runnable updateText;
 
     boolean onOff;
-    TextView texViewArry[] = new TextView[20];
-    PointManage pointViewArry[] = new PointManage[20];
 
     int loopCounter = 0;
+
+    //アクションネーム
+    public final String ACTION_SOLO = "SOLO";
+    public final String ACTION_MULTI = "MULTI";
+    public final String ACTION_END = "END";
+
+    //true = stop画像・false = play画像
+    private boolean onoff_flg = false;
+
+
 
     ArrayList<PointManage> listPointView = new ArrayList<PointManage>();
 
@@ -63,241 +73,206 @@ public class Test_AccessibilityService extends AccessibilityService implements V
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public int onStartCommand(Intent intent, int i, int i2) {
-        // レイアウトを作るか確認
-        if(intent.getAction().equals("ON")) {
-            wm = (WindowManager) getSystemService(WINDOW_SERVICE);
-            layout = new FrameLayout(this);
-            WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+        String action = intent.getAction();
 
+        //ソロ、マルチフラグ
+        int SM_flg = 2;
 
+        //アクションを確認
+        if(action.equals(ACTION_END)){
 
-            lp.type = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY;
-            lp.format = PixelFormat.TRANSLUCENT;
-
-            lp.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-                | WindowManager.LayoutParams.FLAG_FULLSCREEN;
-
-
-            lp.width = WindowManager.LayoutParams.WRAP_CONTENT;
-            lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
-            lp.gravity = Gravity.CENTER_VERTICAL|Gravity.LEFT;
-
-
-            LayoutInflater inflater = LayoutInflater.from(this);
-            inflater.inflate(R.layout.menu, layout);
-
-            //レイアウトを追加
-            wm.addView(layout, lp);
-        }else if(intent.getAction().equals("OFF")) {
-            if(layout != null) {
-                //レイアウトを削除
-                wm.removeViewImmediate(layout);
+            //コントロールパネルの削除
+            if(ctrlPanel != null) {
+                wm.removeViewImmediate(ctrlPanel);
+                ctrlPanel = null;
             }
+
+            //スケジュールのシャットダウン
             if(schedule != null) {
-                schedule.shutdown();
+                onoff_flg = false;
             }
-            int cnt = 0;
-            while (cnt < listPointView.size()){
-                wm.removeView(listPointView.get(cnt).pointView);
-                listPointView.remove(cnt);
-                cnt++;
+            //ポインターを削除
+            while(0 != listPointView.size()){
+                wm.removeView(listPointView.get(listPointView.size() - 1).pointView);
+                listPointView.remove(listPointView.get(listPointView.size() - 1));
             }
 
-            //ユーザー補助をオフにする
-            disableSelf();
+            return START_STICKY;
 
-        }else{
+        }else if(action.equals(ACTION_SOLO)){
+            SM_flg = 1;
+            //コントロールパネルを表示
+            addCtrlPanel(SM_flg);
 
+            //ポインター削除
+            while(0 != listPointView.size()){
+                wm.removeView(listPointView.get(listPointView.size() - 1).pointView);
+                listPointView.remove(listPointView.get(listPointView.size() - 1));
+            }
+
+
+            //ポインターを1つ追加する
+            addPoint();
+
+        }else if(action.equals(ACTION_MULTI)){
+            SM_flg = 2;
+            //コントロールパネルを表示
+            addCtrlPanel(SM_flg);
         }
 
-        TextView txtG = this.layout.findViewById(R.id.txtG);
-        TextView txtB = this.layout.findViewById(R.id.txtB);
-        TextView txtP = this.layout.findViewById(R.id.txtP);
-        TextView txtY = this.layout.findViewById(R.id.txtY);
-        TextView txtO = this.layout.findViewById(R.id.txtO);
-        TextView txtR = this.layout.findViewById(R.id.txtR);
 
-        txtG.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.i("txtG_onClick", "onClick");
-            }
-        });
 
-        txtB.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                addTextView();
-            }
-        });
+        //再生非再生を取得
+        ImageView imgOnOff = this.ctrlPanel.findViewById(R.id.imgOnOff);
+        //ポインタ追加を取得
+        ImageView imgPlus = this.ctrlPanel.findViewById(R.id.imgPlus);
+        //ポインタ削除を取得
+        ImageView imgMinus = this.ctrlPanel.findViewById(R.id.imgMinus);
+        //スワイプ追加を取得
+        ImageView imgSwip = this.ctrlPanel.findViewById(R.id.imgSwipe);
+        //終了を取得
+        ImageView imgClose = this.ctrlPanel.findViewById(R.id.imgClose);
+        //コントロールパネルのドラッグを取得
+        ImageView imgTouch = this.ctrlPanel.findViewById(R.id.imgTouch);
 
-        txtP.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                tap();
-            }
-        });
-
-        txtO.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setSchedule();
-            }
-        });
-
-        txtR.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                changeLayout();
-
-            }
-        });
-
-        txtG.setOnTouchListener(new View.OnTouchListener() {
+        //再生非再生処理
+        imgOnOff.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()){
-                    case MotionEvent.ACTION_DOWN:
-                        //down
-                        Log.i("txtG_onTouch", "ACTION_DOWN");
-                        break;
+                //切り替え
+                if(onoff_flg){
+                    onoff_flg = false;
+                    //ポインターの状態を変更する
+                    changePointerParam();
 
-                    case MotionEvent.ACTION_MOVE:
-                        //move
-                        Log.i("txtG_onTouch", "ACTION_MOVE");
-                        break;
 
-                    case MotionEvent.ACTION_UP:
-                        //up
-                        if(schedule != null) {
-                            schedule.shutdown();
-                        }
-                        Log.i("txtG_onTouch", "ACTION_UP");
-                        break;
+                    //PLAY画像に変更する
+                    cangeOnOffImage(2);
+
+
+
+                }else{
+                    //ポインターの有無確認
+                    if(0 != listPointView.size()){
+                        //ポインターが1つ以上の場合
+                        onoff_flg = true;
+                        //ポインターの状態を変更する
+                        changePointerParam();
+
+                        //ループ開始
+                        setSchedule();
+
+                        //STOP画像に変更する
+                        cangeOnOffImage(1);
+
+                    }
                 }
 
-                return true;
+                return false;
             }
-
         });
 
-        txtY.setOnTouchListener(new View.OnTouchListener() {
+        //ポインタ追加処理
+        imgPlus.setOnClickListener(new View.OnClickListener() {
             @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()){
-                    case MotionEvent.ACTION_DOWN:
-                        //down
-                        Log.i("txtG_onTouch", "ACTION_DOWN");
+            public void onClick(View v) {
+                //ポインター追加
+                addPoint();
+            }
+        });
 
-                        int cnt = 0;
-                        while (cnt < listPointView.size()) {
-                            if (!onOff) {
-                                //叩ける
-                                listPointView.get(cnt).para.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                                        | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-                                        | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-                                        | WindowManager.LayoutParams.FLAG_FULLSCREEN;
-                                wm.updateViewLayout(listPointView.get(cnt).pointView, listPointView.get(cnt).para);
-                                Log.i("add_View", String.valueOf(onOff));
-                            } else {
-                                //叩けない
-                                listPointView.get(cnt).para.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                                        | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-                                        | WindowManager.LayoutParams.FLAG_FULLSCREEN;
-                                wm.updateViewLayout(listPointView.get(cnt).pointView, listPointView.get(cnt).para);
-                                Log.i("add_View", String.valueOf(onOff));
-                            }
-                            cnt++;
-                        }
-
-                        onOff = !onOff;
-
-                        break;
-
-                    case MotionEvent.ACTION_MOVE:
-                        //move
-                        Log.i("txtG_onTouch", "ACTION_MOVE");
-                        break;
-
-                    case MotionEvent.ACTION_UP:
-                        //up
-                        Log.i("txtG_onTouch", "ACTION_UP");
-                        break;
-
-
+        //ポインタ削除処理
+        imgMinus.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //ポインター1つ削除
+                if(0 != listPointView.size()){
+                    wm.removeView(listPointView.get(listPointView.size() - 1).pointView);
+                    listPointView.remove(listPointView.get(listPointView.size() - 1));
                 }
-
-                return true;
             }
         });
 
         return START_STICKY;
+
     }
 
-    //追加
+    //-------------------------------------------------------------------------
+    //  cangeOnOffImage
+    //  引数      int         flg     1 = STOP
+    //                                2 = PLAY
+    //  返り値    void
+    //  備考
+    //-------------------------------------------------------------------------
+    private void cangeOnOffImage(int flg){
+        ImageView iv = this.ctrlPanel.findViewById(R.id.imgOnOff);
+        if(1 == flg){
+            iv.setImageResource(R.drawable.img_stop);
+        }else if(2 == flg){
+            iv.setImageResource(R.drawable.img_play);
+        }
+
+    }
+
+    //-------------------------------------------------------------------------
+    //  addPoint
+    //  引数      void
+    //  返り値    void
+    //  備考
+    //-------------------------------------------------------------------------
     @SuppressLint("ClickableViewAccessibility")
-    private void addTextView(){
-
-
-        //多分　100は大きさ　1は文字数字　trueは？
-        //PointView addPoint = new PointView(this, 100, 1, true);
+    private void addPoint(){
+        //ポインターを作成
         int pointerNum = listPointView.size() + 1;
         PointManage addPoint =new PointManage(this, wm, pointerNum);
 
-
-
+        //作成したポインターをリストに追加
         listPointView.add(addPoint);
 
-            //para = e(100);
-            int w = addPoint.pointView.getResources().getDisplayMetrics().widthPixels;
-            int h = addPoint.pointView.getResources().getDisplayMetrics().heightPixels;
-            addPoint.para.x = (w / 2) - (100 / 2);
-            addPoint.para.y = (h / 2) - (100 / 2);
+        //ポインターの座標を画面の中央に設定
+        int w = addPoint.pointView.getResources().getDisplayMetrics().widthPixels;
+        int h = addPoint.pointView.getResources().getDisplayMetrics().heightPixels;
+        addPoint.para.x = (w / 2) - (100 / 2);
+        addPoint.para.y = (h / 2) - (100 / 2);
 
-            Log.i("add_View", String.valueOf(w));
-            Log.i("add_View", String.valueOf(h));
+//            addPoint.para.flags = para.flags & -17;
 
-            addPoint.para.flags = para.flags & -17;
-            //wm.addView(listPointView.get(0), addPoint.para);
+        addPoint.pointView.postInvalidate();
 
-            addPoint.pointView.postInvalidate();
-
-            onOff = false;
+        onOff = false;
 
     }
 
-    //autoTap
-    private void tap(){
+    //-------------------------------------------------------------------------
+    //  autoTap
+    //  引数      void
+    //  返り値    void
+    //  備考
+    //-------------------------------------------------------------------------
+    private void autoTap(){
         try {
             //オートクリックコマンド
             int x = 0;
             int y = 0;
 
+            //nullチェック      ※必要ない？
             if(listPointView.get(loopCounter) == null) {
                 return;
             }
-                int zahyo[] = new int[2];
+            int zahyo[] = new int[2];
 
-                //座標取得
-                listPointView.get(loopCounter).pointView.getLocationOnScreen(zahyo);
-                x = zahyo[0];
-                y = zahyo[1];
+            //ポインターの座標取得
+            listPointView.get(loopCounter).pointView.getLocationOnScreen(zahyo);
+            x = zahyo[0];
+            y = zahyo[1];
 
-
-                Log.i("add_View", "bbb");
-
-
-
-
-            //GestureDescriptionテスト-----------------------------
-            //場所決め?
-            //Point position = new Point(x -10, y-10);
+            //ポインター座標にタップ位置を設定
             Point position = new Point(x, y);
             Path p = new Path();
             p.moveTo(position.x, position.y);
 
-            GestureDescription.StrokeDescription strokeDescription = new GestureDescription.StrokeDescription(p, listPointView.get(loopCounter).delay_time, 15);
+            //ポインタに設定されたdelay_time後に、15mS間のタップ設定
+            GestureDescription.StrokeDescription strokeDescription = new GestureDescription.StrokeDescription(p, 15, 100);
             GestureDescription.Builder builder = new GestureDescription.Builder();
             builder.addStroke(strokeDescription);
 
@@ -317,13 +292,84 @@ public class Test_AccessibilityService extends AccessibilityService implements V
                 }
             }, null);
 
-
-
         }catch (Exception e){
             Log.i("add_View", e.getMessage().toString());
         }
     }
 
+    //-------------------------------------------------------------------------
+    //  changePointerParam
+    //  引数      void
+    //  返り値    void
+    //  備考
+    //-------------------------------------------------------------------------
+    private void changePointerParam(){
+        int cnt = 0;
+        while (cnt < listPointView.size()) {
+            if (!onOff) {
+                //叩ける
+                listPointView.get(cnt).para.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                        | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                        | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                        | WindowManager.LayoutParams.FLAG_FULLSCREEN;
+                wm.updateViewLayout(listPointView.get(cnt).pointView, listPointView.get(cnt).para);
+                Log.i("add_View", String.valueOf(onOff));
+            } else {
+                //叩けない
+                listPointView.get(cnt).para.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                        | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                        | WindowManager.LayoutParams.FLAG_FULLSCREEN;
+                wm.updateViewLayout(listPointView.get(cnt).pointView, listPointView.get(cnt).para);
+                Log.i("add_View", String.valueOf(onOff));
+            }
+            cnt++;
+        }
+
+        onOff = !onOff;
+    }
+
+    //-------------------------------------------------------------------------
+    //  addCtrlPanel
+    //  引数      int     SM_flg      :サービス起動時のアクションネーム
+    //  返り値    void
+    //  備考
+    //-------------------------------------------------------------------------
+    private void addCtrlPanel(int SM_flg){
+        if(null != ctrlPanel) {
+            wm.removeView(ctrlPanel);
+        }
+        //ウィンドウマネージャー作成
+        wm = (WindowManager) getSystemService(WINDOW_SERVICE);
+        ctrlPanel = new FrameLayout(this);
+
+        //ウィンドウマネージャーのパラメータ設定
+        WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+
+        lp.type = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY;
+        lp.format = PixelFormat.TRANSLUCENT;
+        lp.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                | WindowManager.LayoutParams.FLAG_FULLSCREEN;
+        lp.width = WindowManager.LayoutParams.WRAP_CONTENT;
+        lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
+        lp.gravity = Gravity.CENTER_VERTICAL | Gravity.LEFT;
+
+
+        LayoutInflater inflater = LayoutInflater.from(this);
+        inflater.inflate(R.layout.ctrlpanel, ctrlPanel);
+
+        //ソロ・マルチレイアウト変更
+        if(1 == SM_flg){
+            //プラス・マイナス・スワイプを非表示
+            this.ctrlPanel.findViewById(R.id.imgPlus).setVisibility(View.GONE);
+            this.ctrlPanel.findViewById(R.id.imgMinus).setVisibility(View.GONE);
+            this.ctrlPanel.findViewById(R.id.imgSwipe).setVisibility(View.GONE);
+        }
+
+        //レイアウトを追加
+        wm.addView(ctrlPanel, lp);
+
+    }
 
     //------------------------------------------------------
     //      スケジュール設定
@@ -333,23 +379,32 @@ public class Test_AccessibilityService extends AccessibilityService implements V
 
         updateText = new Runnable() {
             public void run() {
-                tap();
 
+                //現在のスケジュールを消す
                 mHandler.removeCallbacks(updateText);
-                mHandler.postDelayed(updateText, listPointView.get(loopCounter).delay_time + 15);
 
+                //onOffフラグがtrueかチェック
+                if(onoff_flg) {
+                    //タップアクション
+                    autoTap();
+
+                    //delay_time+15mS後に、スケジュールを設定する
+                    mHandler.postDelayed(updateText, listPointView.get(loopCounter).delay_time + 15);
+                }
+
+                //1ターン終了時、先頭に戻すそうでなければ、カウントを進める
                 if (loopCounter + 1 == listPointView.size()){
                     loopCounter = 0;
                 }else{
                     loopCounter++;
                 }
-
-
             }
         };
-        mHandler.postDelayed(updateText, 0);
+        //初回スケジュールを設定
+        mHandler.postDelayed(updateText, 100);
     }
 
+    /*
     //メニュー縦横変更テスト
     private void changeLayout() {
         LinearLayout ll = this.layout.findViewById(R.id.main_layout);
@@ -379,6 +434,7 @@ public class Test_AccessibilityService extends AccessibilityService implements V
         }
 
     }
+    */
 
 
     public void onServiceConnected() {
@@ -395,6 +451,28 @@ public class Test_AccessibilityService extends AccessibilityService implements V
     public void onInterrupt(){
 
     }
+
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        //コントロールパネルの削除
+        if(ctrlPanel != null) {
+            wm.removeViewImmediate(ctrlPanel);
+            ctrlPanel = null;
+        }
+
+        //スケジュールのシャットダウン
+        if(schedule != null) {
+            onoff_flg = false;
+        }
+        //ポインターを削除
+        while(0 != listPointView.size()){
+            wm.removeView(listPointView.get(listPointView.size() - 1).pointView);
+            listPointView.remove(listPointView.get(listPointView.size() - 1));
+        }
+    }
+
+
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
