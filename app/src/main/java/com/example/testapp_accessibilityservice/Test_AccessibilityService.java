@@ -55,13 +55,14 @@ public class Test_AccessibilityService extends AccessibilityService implements V
     TextView texViewArry[] = new TextView[20];
     PointManage pointViewArry[] = new PointManage[20];
 
+    int loopCounter = 0;
+
     ArrayList<PointManage> listPointView = new ArrayList<PointManage>();
 
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public int onStartCommand(Intent intent, int i, int i2) {
-        Log.i("aaaaaa", "NG");
         // レイアウトを作るか確認
         if(intent.getAction().equals("ON")) {
             wm = (WindowManager) getSystemService(WINDOW_SERVICE);
@@ -96,8 +97,11 @@ public class Test_AccessibilityService extends AccessibilityService implements V
             if(schedule != null) {
                 schedule.shutdown();
             }
-            if(listPointView.get(0) != null) {
-                wm.removeView(listPointView.get(0).pointView);
+            int cnt = 0;
+            while (cnt < listPointView.size()){
+                wm.removeView(listPointView.get(cnt).pointView);
+                listPointView.remove(cnt);
+                cnt++;
             }
 
             //ユーザー補助をオフにする
@@ -166,6 +170,9 @@ public class Test_AccessibilityService extends AccessibilityService implements V
 
                     case MotionEvent.ACTION_UP:
                         //up
+                        if(schedule != null) {
+                            schedule.shutdown();
+                        }
                         Log.i("txtG_onTouch", "ACTION_UP");
                         break;
                 }
@@ -183,22 +190,27 @@ public class Test_AccessibilityService extends AccessibilityService implements V
                         //down
                         Log.i("txtG_onTouch", "ACTION_DOWN");
 
-                        if (!onOff){
-                            //叩ける
-                            listPointView.get(0).para.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                                    | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-                                    | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-                                    | WindowManager.LayoutParams.FLAG_FULLSCREEN;
-
-                            Log.i("add_View", String.valueOf(onOff));
-                        }else {
-                            //叩けない
-                            listPointView.get(0).para.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                                    | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-                                    | WindowManager.LayoutParams.FLAG_FULLSCREEN;
-                            Log.i("add_View", String.valueOf(onOff));
+                        int cnt = 0;
+                        while (cnt < listPointView.size()) {
+                            if (!onOff) {
+                                //叩ける
+                                listPointView.get(cnt).para.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                                        | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                                        | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                                        | WindowManager.LayoutParams.FLAG_FULLSCREEN;
+                                wm.updateViewLayout(listPointView.get(cnt).pointView, listPointView.get(cnt).para);
+                                Log.i("add_View", String.valueOf(onOff));
+                            } else {
+                                //叩けない
+                                listPointView.get(cnt).para.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                                        | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                                        | WindowManager.LayoutParams.FLAG_FULLSCREEN;
+                                wm.updateViewLayout(listPointView.get(cnt).pointView, listPointView.get(cnt).para);
+                                Log.i("add_View", String.valueOf(onOff));
+                            }
+                            cnt++;
                         }
-                        wm.updateViewLayout(listPointView.get(0).pointView, listPointView.get(0).para);
+
                         onOff = !onOff;
 
                         break;
@@ -226,9 +238,12 @@ public class Test_AccessibilityService extends AccessibilityService implements V
     //追加
     @SuppressLint("ClickableViewAccessibility")
     private void addTextView(){
-            //多分　100は大きさ　1は文字数字　trueは？
-            //PointView addPoint = new PointView(this, 100, 1, true);
-            PointManage addPoint =new PointManage(this, wm);
+
+
+        //多分　100は大きさ　1は文字数字　trueは？
+        //PointView addPoint = new PointView(this, 100, 1, true);
+        int pointerNum = listPointView.size() + 1;
+        PointManage addPoint =new PointManage(this, wm, pointerNum);
 
 
 
@@ -259,19 +274,20 @@ public class Test_AccessibilityService extends AccessibilityService implements V
             int x = 0;
             int y = 0;
 
-            if(listPointView.get(0) != null) {
-
+            if(listPointView.get(loopCounter) == null) {
+                return;
+            }
                 int zahyo[] = new int[2];
 
                 //座標取得
-                listPointView.get(0).pointView.getLocationOnScreen(zahyo);
+                listPointView.get(loopCounter).pointView.getLocationOnScreen(zahyo);
                 x = zahyo[0];
                 y = zahyo[1];
 
 
                 Log.i("add_View", "bbb");
 
-            }
+
 
 
             //GestureDescriptionテスト-----------------------------
@@ -281,7 +297,7 @@ public class Test_AccessibilityService extends AccessibilityService implements V
             Path p = new Path();
             p.moveTo(position.x, position.y);
 
-            GestureDescription.StrokeDescription strokeDescription = new GestureDescription.StrokeDescription(p, 0, 6000);
+            GestureDescription.StrokeDescription strokeDescription = new GestureDescription.StrokeDescription(p, listPointView.get(loopCounter).delay_time, 15);
             GestureDescription.Builder builder = new GestureDescription.Builder();
             builder.addStroke(strokeDescription);
 
@@ -320,10 +336,18 @@ public class Test_AccessibilityService extends AccessibilityService implements V
                 tap();
 
                 mHandler.removeCallbacks(updateText);
-                mHandler.postDelayed(updateText, 6000 + 15);
+                mHandler.postDelayed(updateText, listPointView.get(loopCounter).delay_time + 15);
+
+                if (loopCounter + 1 == listPointView.size()){
+                    loopCounter = 0;
+                }else{
+                    loopCounter++;
+                }
+
+
             }
         };
-        mHandler.postDelayed(updateText, 1000);
+        mHandler.postDelayed(updateText, 0);
     }
 
     //メニュー縦横変更テスト
@@ -333,10 +357,9 @@ public class Test_AccessibilityService extends AccessibilityService implements V
             ll.setOrientation(LinearLayout.HORIZONTAL);
 
             ViewGroup.LayoutParams para = ll.getLayoutParams();
-            int height = para.height;
-            int width = para.width;
-            para.height = width;
-            para.width = height;
+
+            para.height = para.width;
+            para.width = para.height;
             ll.setLayoutParams(para);
             this.layout.findViewById(R.id.txtB).setVisibility(View.VISIBLE);
 

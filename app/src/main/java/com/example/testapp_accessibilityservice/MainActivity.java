@@ -4,17 +4,12 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.graphics.Color;
-import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -30,23 +25,58 @@ public class MainActivity extends AppCompatActivity {
 
         Button btnStart = findViewById(R.id.btnStart_MainLayout);
         Button btnEnd = findViewById(R.id.btnEnd_MainLayout);
-        Button btnTest = findViewById(R.id.btnTest_MainActivity);
+        Button btnTest1 = findViewById(R.id.btnTest1_MainActivity);
+        Button btnTest2 = findViewById(R.id.btnTest2_MainActivity);
+        Button btnTest3 = findViewById(R.id.btnTest3_MainActivity);
+
         btnflg = true;
 
-        btnTest.setOnClickListener(new View.OnClickListener() {
+        btnTest1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (btnflg) {
-                    btnTest.setBackgroundColor(Color.RED);
+                    btnTest1.setBackgroundColor(Color.RED);
                     btnflg = false;
 
                 }else{
-                    btnTest.setBackgroundColor(Color.BLUE);
+                    btnTest1.setBackgroundColor(Color.BLUE);
                     btnflg = true;
 
                 }
             }
         });
+
+        btnTest2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (btnflg) {
+                    btnTest2.setBackgroundColor(Color.GREEN);
+                    btnflg = false;
+
+                }else{
+                    btnTest2.setBackgroundColor(Color.YELLOW);
+                    btnflg = true;
+
+                }
+            }
+        });
+
+
+        btnTest3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (btnflg) {
+                    btnTest3.setBackgroundColor(Color.BLACK);
+                    btnflg = false;
+
+                }else{
+                    btnTest3.setBackgroundColor(Color.MAGENTA);
+                    btnflg = true;
+
+                }
+            }
+        });
+
 
         btnStart.setOnClickListener(new View.OnClickListener() {
             @Override

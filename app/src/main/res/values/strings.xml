@@ -8,4 +8,6 @@
     <string name="End">END</string>
     <string name="BLANK" />
     <string name="TestBtn">TESTBTN</string>
+    <string name="TestBtn2">TESTBTN2</string>
+    <string name="TestBtn3">TESTBTN3</string>
 </resources>
